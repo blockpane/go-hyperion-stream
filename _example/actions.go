@@ -26,7 +26,7 @@ func main() {
 	results := make(chan stream.HyperionResponse)
 	errors := make(chan error)
 
-	client, err := stream.NewClient(url, false, results, errors)
+	client, err := stream.NewClient(url, results, errors)
 	fatal(err)
 
 	err = client.StreamActions(stream.NewActionsReq(contract, account, action))

@@ -2,12 +2,11 @@ package stream
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"math"
 	"net/http"
+	"nhooyr.io/websocket"
 	"strings"
 	"time"
 )
@@ -35,26 +34,22 @@ type Client struct {
 	wait       chan interface{}
 }
 
-func NewClient(url string, insecureTls bool, results chan HyperionResponse, errors chan error) (*Client, error) {
+func NewClient(url string, results chan HyperionResponse, errors chan error) (*Client, error) {
 	c := &Client{}
 	c.Ctx, c.cancel = context.WithCancel(context.Background())
 
-	dial := websocket.DefaultDialer
-	dial.TLSClientConfig = &tls.Config{InsecureSkipVerify: insecureTls}
 	url = strings.TrimRight(url, "/")
-	conn, _, err := dial.DialContext(c.Ctx, url+`/socket.io/?EIO=3&transport=websocket`, Header)
+	conn, _, err := websocket.Dial(c.Ctx, url+`/socket.io/?EIO=3&transport=websocket`, &websocket.DialOptions{
+		Subprotocols: []string{"echo"},
+	})
 	if err != nil {
 		return nil, err
 	}
 	c.conn = conn
 	c.reqQueue = make(chan []byte)
 	c.wait = make(chan interface{})
-
 	c.conn.SetReadLimit(maxMessageSize)
-	_ = c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
-	var sendPing bool
 	go func() {
 		ping := time.NewTicker((pongWait * 2) / 3)
 		for {
@@ -62,12 +57,15 @@ func NewClient(url string, insecureTls bool, results chan HyperionResponse, erro
 			case <-c.Ctx.Done():
 				errors <- ExitError{}
 				// socket.io specific disconnect message:
-				_ = c.conn.WriteMessage(websocket.TextMessage, []byte("41"))
-				_ = c.conn.Close()
+				_ = c.conn.Write(c.Ctx, websocket.MessageText, []byte("41"))
+				_ = c.conn.CloseRead(context.Background())
 				c.cancel()
 				return
 			case <-ping.C:
-				sendPing = true
+				err = c.conn.Write(c.Ctx, websocket.MessageText, []byte("2"))
+				if err != nil {
+					errors <-err
+				}
 			}
 		}
 	}()
@@ -75,37 +73,19 @@ func NewClient(url string, insecureTls bool, results chan HyperionResponse, erro
 	go func() {
 		<-c.wait
 		for {
-			// FIXME: DEADLOCK!
-			if sendPing {
-				sendPing = false
-				//err := c.WriteControl(PongMessage, []byte(message), time.Now().Add(writeWait))
-				err = c.conn.WriteJSON(2)
-				time.Sleep(100*time.Millisecond)
-				if err != nil {
-					errors <-err
-				}
-			}
-			mtype, message, err := c.conn.ReadMessage()
+			mtype, message, err := c.conn.Read(c.Ctx)
 			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					errors <- err
-					c.cancel()
-				}
+				errors <-err
+				c.cancel()
 				break
 			}
-			switch mtype {
-			case websocket.TextMessage:
+			switch true {
+			case mtype == websocket.MessageText:
 				break
-			case websocket.CloseMessage:
+			case mtype > 1000:
 				c.cancel()
 			default:
 				continue
-			}
-
-			if string(message) == "3" {
-				// handle socket.io's strange nonstandard ping/pong:
-				_ = c.conn.SetReadDeadline(time.Now().Add(pongWait))
-				return
 			}
 
 			if len(message) < 2 || string(message[:2]) != "42" {
@@ -193,7 +173,7 @@ func (c *Client) StreamActions(req *ActionsReq) error {
 	if err != nil {
 		return err
 	}
-	err = c.conn.WriteMessage(websocket.TextMessage, append(append([]byte(`420["action_stream_request",`), j...), []byte("]")...))
+	err = c.conn.Write(c.Ctx, websocket.MessageText, append(append([]byte(`420["action_stream_request",`), j...), []byte("]")...))
 	if err != nil {
 		return err
 	}
