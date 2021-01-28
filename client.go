@@ -4,14 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"math"
-	"net/http"
 	"nhooyr.io/websocket"
 	"strings"
 	"time"
-)
-
-var (
-	Header = http.Header{"User-Agent": {"go-hyperion-stream"}} // allow user-agent override
 )
 
 const (
@@ -19,6 +14,8 @@ const (
 	maxMessageSize = 8192
 )
 
+// Client is a streaming client using a websocket to connect to Hyperion. The Client.Ctx will get closed when the
+// websocket is terminated.
 type Client struct {
 	Ctx context.Context
 
@@ -33,6 +30,10 @@ type Client struct {
 	wait       chan interface{}
 }
 
+// NewClient immediately connects to Hyperion, handles ping/pongs, and stores state information such as last
+// irreversible block number in the Client.LibNum. It expects two channels for sending results and errors.
+// Once connected a query will need to be sent before any output is sent over the results channel. If no request is
+// sent in the first 25 seconds the websocket will be closed by Hyperion.
 func NewClient(url string, results chan HyperionResponse, errors chan error) (*Client, error) {
 	c := &Client{}
 	c.Ctx, c.cancel = context.WithCancel(context.Background())
@@ -72,9 +73,9 @@ func NewClient(url string, results chan HyperionResponse, errors chan error) (*C
 	go func() {
 		<-c.wait
 		for {
-			mtype, message, err := c.conn.Read(c.Ctx)
-			if err != nil {
-				errors <- err
+			mtype, message, readErr := c.conn.Read(c.Ctx)
+			if readErr != nil {
+				errors <- readErr
 				c.cancel()
 				break
 			}
@@ -94,9 +95,9 @@ func NewClient(url string, results chan HyperionResponse, errors chan error) (*C
 
 			go func(m []byte) {
 				raw := make([]interface{}, 2)
-				err = json.Unmarshal(m[2:], &raw)
-				if err != nil {
-					errors <- err
+				e := json.Unmarshal(m[2:], &raw)
+				if e != nil {
+					errors <- e
 					return
 				}
 
@@ -140,13 +141,19 @@ func NewClient(url string, results chan HyperionResponse, errors chan error) (*C
 				}
 
 				switch raw[1].(map[string]interface{})["type"].(string) {
-				case "delta":
-					// TODO, and btw is it even "delta"???
+				case "delta_trace":
+					d := &DeltaTrace{}
+					e = json.Unmarshal([]byte(raw[1].(map[string]interface{})["message"].(string)), d)
+					if e != nil {
+						errors <- e
+						return
+					}
+					results <- d
 				case "action_trace":
 					a := &ActionTrace{}
-					err = json.Unmarshal([]byte(raw[1].(map[string]interface{})["message"].(string)), a)
-					if err != nil {
-						errors <- err
+					e = json.Unmarshal([]byte(raw[1].(map[string]interface{})["message"].(string)), a)
+					if e != nil {
+						errors <- e
 						return
 					}
 					results <- a
@@ -158,6 +165,8 @@ func NewClient(url string, results chan HyperionResponse, errors chan error) (*C
 	return c, err
 }
 
+// StreamActions will emit an action stream request to Hyperion. Note that only one stream subscription is supported
+// in this library to keep things simple.
 func (c *Client) StreamActions(req *ActionsReq) error {
 	if c.subscribed {
 		return BusyError{}
@@ -167,6 +176,24 @@ func (c *Client) StreamActions(req *ActionsReq) error {
 		return err
 	}
 	err = c.conn.Write(c.Ctx, websocket.MessageText, append(append([]byte(`420["action_stream_request",`), j...), []byte("]")...))
+	if err != nil {
+		return err
+	}
+	c.subscribed = true
+	close(c.wait)
+	return nil
+}
+
+// StreamDeltas will emit an delta stream request to Hyperion.
+func (c *Client) StreamDeltas(req *DeltasReq) error {
+	if c.subscribed {
+		return BusyError{}
+	}
+	j, err := req.ToJson()
+	if err != nil {
+		return err
+	}
+	err = c.conn.Write(c.Ctx, websocket.MessageText, append(append([]byte(`420["delta_stream_request",`), j...), []byte("]")...))
 	if err != nil {
 		return err
 	}

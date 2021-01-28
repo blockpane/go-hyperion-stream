@@ -6,7 +6,6 @@ This software is NOT complete, interfaces and data structures are in-flux, it is
 
 ## Todo:
 
-- implement delta events
 - better error handling
 - tests
 
@@ -20,7 +19,6 @@ package main
 import (
 	stream "github.com/blockpane/go-hyperion-stream"
 	"log"
-	"os"
 )
 
 var (
@@ -31,43 +29,42 @@ var (
 )
 
 func main() {
-	log.SetFlags(log.Lshortfile|log.LstdFlags)
-	fatal := func(e error) {
-		if e != nil {
-			_ = log.Output(2, e.Error())
-			os.Exit(1)
-		}
-	}
-
 	results := make(chan stream.HyperionResponse)
 	errors := make(chan error)
 
 	client, err := stream.NewClient(url, results, errors)
-	fatal(err)
+	if err != nil {
+		panic(err)
+	}
 
 	err = client.StreamActions(stream.NewActionsReq(contract, account, action))
-	fatal(err)
+	if err != nil {
+		panic(err)
+	}
 
+	act := &stream.ActionTrace{}
 	for {
 		select {
 		case <-client.Ctx.Done():
 			return
+			
 		case e := <-errors:
 			switch e.(type) {
 			case stream.ExitError:
-				fatal(e)
+				panic(e)
 			default:
 				log.Println(e)
 			}
+
 		case response := <-results:
 			switch response.Type() {
 			case stream.RespActionType:
-				action, err := response.Action()
+				act, err = response.Action()
 				if err != nil {
 					log.Println(err)
 					continue
 				}
-				log.Printf("%13s <- %11v %-13s - %v\n", action.Act.Data["miner"], action.Act.Data["bounty"], action.Act.Data["planet_name"], action.Act.Data["land_id"])
+				log.Printf("%13s <- %11v %-13s - %v\n", act.Act.Data["miner"], act.Act.Data["bounty"], act.Act.Data["planet_name"], act.Act.Data["land_id"])
 			}
 		}
 	}
