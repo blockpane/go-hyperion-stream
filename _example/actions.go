@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	stream "github.com/blockpane/go-hyperion-stream"
 	"log"
 	"os"
@@ -51,7 +50,7 @@ func main() {
 					log.Println(err)
 					continue
 				}
-				fmt.Printf("%13s <- %11v %-13s - %v\n", action.Act.Data["miner"], action.Act.Data["bounty"], action.Act.Data["planet_name"], action.Act.Data["land_id"])
+				log.Printf("%13s <- %11v %-13s - %v\n", action.Act.Data["miner"], action.Act.Data["bounty"], action.Act.Data["planet_name"], action.Act.Data["land_id"])
 			}
 		}
 	}
