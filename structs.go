@@ -92,15 +92,15 @@ func NewActionsReq(contract string, account string, action string) *ActionsReq {
 	return nar(contract, account, action, nil, nil, 0, 0)
 }
 
-// NewActionsReqByTime is a request for action traces with a specific block range. If last == 0 Hyperion will continue
-// streaming data once it has caught up to the head block.
+// NewActionsReqByBlock is a request for action traces with a specific time range. Note that it uses pointers, and passing
+// in a nil pointer for the end time will instruct Hyperion to continue streaming once it has caught up to the current
+// head block.
 func NewActionsReqByTime(contract string, account string, action string, start *time.Time, end *time.Time) *ActionsReq {
 	return nar(contract, account, action, start, end, 0, 0)
 }
 
-// NewActionsReqByBlock is a request for action traces with a specific time range. Note that it uses pointers, and passing
-// in a nil pointer for the end time will instruct Hyperion to continue streaming once it has caught up to the current
-// head block.
+// NewActionsReqByTime is a request for action traces with a specific block range. If last == 0 Hyperion will continue
+// streaming data once it has caught up to the head block.
 func NewActionsReqByBlock(contract string, account string, action string, first int64, last int64) *ActionsReq {
 	return nar(contract, account, action, nil, nil, first, last)
 }

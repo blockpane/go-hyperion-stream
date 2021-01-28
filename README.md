@@ -1,7 +1,7 @@
 # go-hyperion-stream
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/blockpane/go-hyperion-stream.svg)](https://pkg.go.dev/github.com/blockpane/go-hyperion-stream)
-![Gosec](https://github.com/blockpane/go-hyperion-stream/workflows/Gosec/badge.svg)
+[![Gosec](https://github.com/blockpane/go-hyperion-stream/workflows/Gosec/badge.svg)](https://github.com/blockpane/go-hyperion-stream/actions?query=workflow%3AGosec)
 
 This is a library for the [Hyperion Stream API](https://hyperion.docs.eosrio.io/stream_client/).
 
