@@ -77,11 +77,14 @@ func main() {
 Outputs:
 
 ```text
-2021/01/28 00:20:22 actions.go:53:     t1sqw.wam <-  0.7808 TLM neri.world    - 1099512960086
-2021/01/28 00:20:23 actions.go:53:     x5fqy.wam <-  0.8697 TLM neri.world    - 1099512960946
-2021/01/28 00:20:23 actions.go:53:     pwway.wam <-  1.9841 TLM naron.world   - 1099512961215
-2021/01/28 00:20:23 actions.go:53:     t4vay.wam <-  0.9841 TLM kavian.world  - 1099512961373
-2021/01/28 00:20:24 actions.go:53:     lkxqy.wam <-  0.9859 TLM kavian.world  - 1099512961373
-2021/01/28 00:20:24 actions.go:53:     eswqy.wam <-  8.6215 TLM magor.world   - 1099512961402
+2021/01/28 14:06:21     pgqqy.wam <-  1.4961 TLM eyeke.world   - 1099512960814
+2021/01/28 14:06:21     mnk4g.wam <-  1.0674 TLM neri.world    - 1099512958948
+2021/01/28 14:06:21     v5bqy.wam <-  1.6872 TLM magor.world   - 1099512960536
+2021/01/28 14:06:22     a.nqy.wam <-  0.1773 TLM kavian.world  - 1099512961065
+2021/01/28 14:06:22     jgxqy.wam <-  0.9895 TLM eyeke.world   - 1099512961378
+2021/01/28 14:06:22     ppjay.wam <-  2.4352 TLM magor.world   - 1099512959814
+2021/01/28 14:06:22     i5jay.wam <-  0.7850 TLM kavian.world  - 1099512959254
+2021/01/28 14:06:22     r53qy.wam <-  0.6678 TLM kavian.world  - 1099512958463
+2021/01/28 14:06:23     x1gay.wam <-  0.4707 TLM neri.world    - 1099512958632
 ...
 ```

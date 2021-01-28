@@ -94,75 +94,94 @@ func NewClient(url string, results chan HyperionResponse, errors chan error) (*C
 			}
 
 			go func(m []byte) {
-				raw := make([]interface{}, 2)
-				e := json.Unmarshal(m[2:], &raw)
-				if e != nil {
-					errors <- e
+				raw, ok := getRaw(m, c, errors)
+				if !ok {
 					return
 				}
-
-				// if it's not a string we're going to end up in trouble since reflection is involved, some socket.io
-				// status messages pass arrays or objects here.
-				switch raw[0].(type) {
-				case string:
-					break
-				default:
-					return
-				}
-
-				switch raw[0].(string) {
-				case "lib_update":
-					// track lib updates in stream.Client variables:
-					update := raw[1].(map[string]interface{})
-					if update["chain_id"] == nil || update["block_num"] == nil || update["block_id"] == nil {
-						return
-					}
-					c.ChainId = update["chain_id"].(string)
-					c.LibNum = uint32(math.Round(update["block_num"].(float64)))
-					c.LibId = update["block_id"].(string)
-					return
-				case "message":
-					break
-				default:
-					// everything else we don't care
-					return
-				}
-
-				// make sure we have have a map
-				switch raw[1].(type) {
-				case map[string]interface{}:
-					break
-				default:
-					return
-				}
-
-				if raw[1].(map[string]interface{})["type"] == nil || raw[1].(map[string]interface{})["message"] == nil {
-					return
-				}
-
-				switch raw[1].(map[string]interface{})["type"].(string) {
-				case "delta_trace":
-					d := &DeltaTrace{}
-					e = json.Unmarshal([]byte(raw[1].(map[string]interface{})["message"].(string)), d)
-					if e != nil {
-						errors <- e
-						return
-					}
-					results <- d
-				case "action_trace":
-					a := &ActionTrace{}
-					e = json.Unmarshal([]byte(raw[1].(map[string]interface{})["message"].(string)), a)
-					if e != nil {
-						errors <- e
-						return
-					}
-					results <- a
-				}
+				sendResult(raw, results, errors)
 			}(message)
 		}
 	}()
 
 	return c, err
+}
+
+// getRaw parses out the message, and determines if it needs to be processed. It has been split out
+// to facilitate unit tests.
+func getRaw(m []byte, c *Client, errors chan error) (raw []interface{}, ok bool) {
+	raw = make([]interface{}, 0)
+	e := json.Unmarshal(m[2:], &raw)
+	if e != nil {
+		errors <- e
+		return nil, false
+	}
+
+	// if it's not a string we're going to end up in trouble since reflection is involved, some socket.io
+	// status messages pass arrays or objects here.
+	switch raw[0].(type) {
+	case string:
+		break
+	default:
+		return nil, false
+	}
+
+	switch raw[0].(string) {
+	case "lib_update":
+		// track lib updates in stream.Client variables:
+		update := raw[1].(map[string]interface{})
+		if update["chain_id"] == nil || update["block_num"] == nil || update["block_id"] == nil {
+			return nil, false
+		}
+		c.ChainId = update["chain_id"].(string)
+		c.LibNum = uint32(math.Round(update["block_num"].(float64)))
+		c.LibId = update["block_id"].(string)
+		return nil, false
+	case "message":
+		break
+	default:
+		// everything else we don't care
+		return nil, false
+	}
+	return raw, true
+}
+
+// sendResult performs final processing of the message, and forwards along if it is valid.
+func sendResult(raw []interface{}, results chan HyperionResponse, errors chan error) {
+	if len(raw) != 2 {
+		return
+	}
+	var e error
+
+	// make sure we have have a map
+	switch raw[1].(type) {
+	case map[string]interface{}:
+		break
+	default:
+		return
+	}
+
+	if raw[1].(map[string]interface{})["type"] == nil || raw[1].(map[string]interface{})["message"] == nil {
+		return
+	}
+
+	switch raw[1].(map[string]interface{})["type"].(string) {
+	case "delta_trace":
+		d := &DeltaTrace{}
+		e = json.Unmarshal([]byte(raw[1].(map[string]interface{})["message"].(string)), d)
+		if e != nil {
+			errors <- e
+			return
+		}
+		results <- d
+	case "action_trace":
+		a := &ActionTrace{}
+		e = json.Unmarshal([]byte(raw[1].(map[string]interface{})["message"].(string)), a)
+		if e != nil {
+			errors <- e
+			return
+		}
+		results <- a
+	}
 }
 
 // StreamActions will emit an action stream request to Hyperion. Note that only one stream subscription is supported
