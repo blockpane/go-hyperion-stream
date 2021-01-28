@@ -1,3 +1,14 @@
+# go-hyperion-stream
+
+This is a client for the [Hyperion Steam Client](https://hyperion.docs.eosrio.io/stream_client/).
+
+This software is NOT complete, interfaces and data structures are in-flux, it is not stable, and entirely untested.
+
+### Example
+
+Prints a stream of rewards paid for players of [Alien Worlds](https://alienworlds.io) on WAX
+
+```go
 package main
 
 import (
@@ -56,3 +67,4 @@ func main() {
 		}
 	}
 }
+```

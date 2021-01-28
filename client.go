@@ -3,7 +3,6 @@ package stream
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"math"
 	"net/http"
 	"nhooyr.io/websocket"
@@ -64,7 +63,7 @@ func NewClient(url string, results chan HyperionResponse, errors chan error) (*C
 			case <-ping.C:
 				err = c.conn.Write(c.Ctx, websocket.MessageText, []byte("2"))
 				if err != nil {
-					errors <-err
+					errors <- err
 				}
 			}
 		}
@@ -75,7 +74,7 @@ func NewClient(url string, results chan HyperionResponse, errors chan error) (*C
 		for {
 			mtype, message, err := c.conn.Read(c.Ctx)
 			if err != nil {
-				errors <-err
+				errors <- err
 				c.cancel()
 				break
 			}
@@ -145,18 +144,12 @@ func NewClient(url string, results chan HyperionResponse, errors chan error) (*C
 					// TODO, and btw is it even "delta"???
 				case "action_trace":
 					a := &ActionTrace{}
-					//fmt.Println(raw[1].(map[string]interface{})["message"].(string))
 					err = json.Unmarshal([]byte(raw[1].(map[string]interface{})["message"].(string)), a)
 					if err != nil {
-						errors <-err
+						errors <- err
 						return
 					}
-					//j, _ := json.MarshalIndent(a, "", "  ")
-					//fmt.Println(string(j))
-					results <-a
-				// FIXME: delete debug cruft
-				default:
-					fmt.Println("unknown message:", raw[1].(map[string]interface{})["type"].(string))
+					results <- a
 				}
 			}(message)
 		}
