@@ -2,6 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/blockpane/go-hyperion-stream.svg)](https://pkg.go.dev/github.com/blockpane/go-hyperion-stream)
 [![Gosec](https://github.com/blockpane/go-hyperion-stream/workflows/Gosec/badge.svg)](https://github.com/blockpane/go-hyperion-stream/actions?query=workflow%3AGosec)
+[![CodeQL](https://github.com/blockpane/go-hyperion-stream/workflows/CodeQL/badge.svg)](https://github.com/blockpane/go-hyperion-stream/actions?query=workflow%3ACodeQL)
 [![Build Status](https://github.com/blockpane/go-hyperion-stream/workflows/Tests/badge.svg)](https://github.com/blockpane/go-hyperion-stream/actions?workflow=Tests)
 [![Go Report Card](https://goreportcard.com/badge/github.com/blockpane/go-hyperion-stream)](https://goreportcard.com/report/github.com/blockpane/go-hyperion-stream)
 [![Coverage Status](https://coveralls.io/repos/github/blockpane/go-hyperion-stream/badge.svg?branch=develop)](https://coveralls.io/github/blockpane/go-hyperion-stream?branch=develop)
