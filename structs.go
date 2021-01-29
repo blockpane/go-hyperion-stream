@@ -151,12 +151,12 @@ const (
 	// RespActionType denotes an action record sent by Hyperion
 	RespActionType ResponseType = "action"
 	// RespDeltaType denotes a delta (table update) record sent by Hyperion
-	RespDeltaType  ResponseType = "delta"
+	RespDeltaType ResponseType = "delta"
 
 	// RespModeLive denotes data is being received in near-real-time
-	RespModeLive   ResponseMode = "live"
+	RespModeLive ResponseMode = "live"
 	// RespModeHist denotes data is being replayed from history
-	RespModeHist   ResponseMode = "history"
+	RespModeHist ResponseMode = "history"
 )
 
 // HyperionResponse is the data being streamed over the results channel of the stream.Client it can be one of

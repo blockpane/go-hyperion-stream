@@ -155,7 +155,7 @@ func TestDeltaMsg(t *testing.T) {
 func TestActionMsg(t *testing.T) {
 	const (
 		actionTraceMessage = `42["message",{"type":"action_trace","mode":"live","message":"{\"action_ordinal\":5,\"creator_action_ordinal\":1,\"act\":{\"account\":\"m.federation\",\"name\":\"logmine\",\"authorization\":[{\"actor\":\"m.federation\",\"permission\":\"log\"}],\"data\":{\"miner\":\"sp4ay.wam\",\"params\":{\"invalid\":0,\"error\":\"\",\"delay\":340,\"difficulty\":3,\"ease\":68,\"luck\":17,\"commission\":500},\"bounty\":\"0.4048 TLM\",\"land_id\":\"1099512961385\",\"planet_name\":\"neri.world\",\"landowner\":\"ve.qu.wam\",\"bag_items\":[\"1099514303963\",\"1099514347290\",\"1099514364881\"],\"offset\":107}},\"context_free\":false,\"elapsed\":\"76\",\"@timestamp\":\"2021-01-28T19:37:19.000\",\"block_num\":100856033,\"producer\":\"cryptolions1\",\"trx_id\":\"53cdc7714dc40cc0042c45215dd48023afad51d54dcce75ddb6354c85d064888\",\"global_sequence\":957257254,\"receipts\":[{\"receiver\":\"m.federation\",\"global_sequence\":\"957257254\",\"recv_sequence\":\"36534368\",\"auth_sequence\":[{\"account\":\"m.federation\",\"sequence\":\"50649143\"}]}],\"code_sequence\":36,\"abi_sequence\":10,\"notified\":[\"m.federation\"]}"}]`
-		libUpdateMessage = `42["lib_update",{"chain_id":"1064487b3cd1a897ce03ae5b6a865651747e2e152090f99c1d19d44e01aea5a4","block_num":100855706,"block_id":"0602EF9A11985228B31A8711A2402B354DD07697EAA68A2FB772B876B11FB17E"}]`
+		libUpdateMessage   = `42["lib_update",{"chain_id":"1064487b3cd1a897ce03ae5b6a865651747e2e152090f99c1d19d44e01aea5a4","block_num":100855706,"block_id":"0602EF9A11985228B31A8711A2402B354DD07697EAA68A2FB772B876B11FB17E"}]`
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -220,7 +220,7 @@ func TestActionMsg(t *testing.T) {
 
 	// LIB update message:
 	raw, ok := getRaw([]byte(libUpdateMessage), client, errors)
-	switch true{
+	switch true {
 	case ok:
 		t.Error("lib update should not return true")
 		fallthrough
