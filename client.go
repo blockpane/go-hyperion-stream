@@ -221,14 +221,18 @@ func (c *Client) StreamDeltas(req *DeltasReq) error {
 	return nil
 }
 
+// ExitError is used when the socket.io-specific exit message is received
 type ExitError struct{}
 
+// Error satisfies the error interface
 func (e ExitError) Error() string {
 	return "websocket closed"
 }
 
+// BusyError is used when a socket already has a subscription
 type BusyError struct{}
 
+// Error satisfies the error interface
 func (b BusyError) Error() string {
 	return "websocket subscription already active, please use a new client for additional subscriptions"
 }
