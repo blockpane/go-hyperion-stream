@@ -164,14 +164,6 @@ func TestActionMsg(t *testing.T) {
 	client := &Client{}
 	wantError := true
 
-	// safety catch for deadlock
-	go func() {
-		select {
-		case <- time.After(2*time.Second):
-			cancel()
-		}
-	}()
-
 	go func() {
 		for {
 			select {
