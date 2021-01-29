@@ -31,14 +31,14 @@ func wsDriver() {
 		_ = c.Close(websocket.StatusNormalClosure, "")
 	})
 	http.HandleFunc("/socket.io/", handler)
-	_ = http.ListenAndServe("127.0.0.1:23456", nil)
+	_ = http.ListenAndServe("localhost:23456", nil)
 }
 
 func TestStreamActions(t *testing.T) {
 	results := make(chan HyperionResponse)
 	errors := make(chan error)
 	go wsDriver()
-	c, err := NewClient("ws://127.0.0.1:23456", results, errors)
+	c, err := NewClient("ws://localhost:23456", results, errors)
 	if err != nil {
 		t.Error("new client:", err)
 	}
@@ -65,7 +65,7 @@ func TestStreamActions(t *testing.T) {
 func TestStreamDeltas(t *testing.T) {
 	results := make(chan HyperionResponse)
 	errors := make(chan error)
-	c, err := NewClient("ws://127.0.0.1:23456", results, errors)
+	c, err := NewClient("ws://localhost:23456", results, errors)
 	if err != nil {
 		t.Error("new client:", err)
 	}
