@@ -5,10 +5,6 @@ import (
 	"github.com/eoscanada/eos-go"
 )
 
-type hyperionReq interface {
-	toReq() ([]byte, error)
-}
-
 // DeltasReq is the query sent to Hyperion requesting a stream of table updates.
 type DeltasReq struct {
 	Code      eos.AccountName `json:"code"`
