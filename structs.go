@@ -60,6 +60,7 @@ func ndr(code string, table string, scope string, payer string, startRFC3339 str
 	return d
 }
 
+// ToJson marshals a DeltasReq to JSON
 func (dr *DeltasReq) ToJson() ([]byte, error) {
 	return json.Marshal(dr)
 }
@@ -135,6 +136,7 @@ func (ar *ActionsReq) AddFilter(f *ReqFilter) (ok bool) {
 	return true
 }
 
+// ToJson marshals a ActionsReq to JSON
 func (ar *ActionsReq) ToJson() ([]byte, error) {
 	return json.Marshal(ar)
 }
@@ -146,10 +148,15 @@ type ResponseType string
 type ResponseMode string
 
 const (
+	// RespActionType denotes an action record sent by Hyperion
 	RespActionType ResponseType = "action"
-	RespDeltaType  ResponseType = "delta"
-	RespModeLive   ResponseMode = "live"
-	RespModeHist   ResponseMode = "history"
+	// RespDeltaType denotes a delta (table update) record sent by Hyperion
+	RespDeltaType ResponseType = "delta"
+
+	// RespModeLive denotes data is being received in near-real-time
+	RespModeLive ResponseMode = "live"
+	// RespModeHist denotes data is being replayed from history
+	RespModeHist ResponseMode = "history"
 )
 
 // HyperionResponse is the data being streamed over the results channel of the stream.Client it can be one of
@@ -216,6 +223,7 @@ func (act *ActionTrace) Delta() (*DeltaTrace, error) {
 	return nil, NotDeltaError{}
 }
 
+// ToJson marshals an ActionTrace to JSON
 func (act *ActionTrace) ToJson() []byte {
 	if act == nil {
 		return nil
@@ -227,6 +235,7 @@ func (act *ActionTrace) ToJson() []byte {
 	return b
 }
 
+// DeltaTrace is the struct returned for table updates from Hyperion
 type DeltaTrace struct {
 	Code       eos.AccountName `json:"code"`
 	Scope      eos.Name        `json:"scope"`
@@ -263,6 +272,7 @@ func (d *DeltaTrace) Delta() (*DeltaTrace, error) {
 	return d, nil
 }
 
+// ToJson marshals a DeltaTrace to JSON
 func (d *DeltaTrace) ToJson() []byte {
 	if d == nil {
 		return nil
@@ -274,20 +284,26 @@ func (d *DeltaTrace) ToJson() []byte {
 	return b
 }
 
+// NotActionError is used when HyperionResponse.Action() is used on a DeltaTrace
 type NotActionError struct{}
 
+// Error satisfies the error interface
 func (NotActionError) Error() string {
 	return "not an action"
 }
 
+// NotDeltaError is used when HyperionResponse.Delta() is used on a ActionTrace
 type NotDeltaError struct{}
 
+// Error satisfies the error interface
 func (NotDeltaError) Error() string {
 	return "not a delta"
 }
 
+// UnknownTypeError is used when an unknown trace message is received
 type UnknownTypeError struct{}
 
+// Error satisfies the error interface
 func (UnknownTypeError) Error() string {
 	return "unknown response type"
 }

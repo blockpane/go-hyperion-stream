@@ -11,7 +11,7 @@ import (
 )
 
 func wsDriver() {
-	handler := http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c, err := websocket.Accept(w, r, nil)
 		if err != nil {
 			return
