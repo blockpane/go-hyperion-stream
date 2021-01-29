@@ -3,7 +3,6 @@ package stream
 import (
 	"encoding/json"
 	"github.com/eoscanada/eos-go"
-	"time"
 )
 
 type hyperionReq interface {
@@ -22,23 +21,24 @@ type DeltasReq struct {
 
 // NewDeltasReq is a request for table updates starting at the current head block.
 func NewDeltasReq(code string, table string, scope string, payer string) *DeltasReq {
-	return ndr(code, table, scope, payer, nil, nil, 0, 0)
+	return ndr(code, table, scope, payer, "", "", 0, 0)
 }
 
 // NewDeltasReqByBlock is a request for table updates with a specific block range. If last == 0 Hyperion will continue
 // streaming data once it has caught up to the head block.
 func NewDeltasReqByBlock(code string, table string, scope string, payer string, first int64, last int64) *DeltasReq {
-	return ndr(code, table, scope, payer, nil, nil, first, last)
+	return ndr(code, table, scope, payer, "", "", first, last)
 }
 
-// NewDeltasReqByTime is a request for table updates with a specific time range. Note that it uses pointers, and passing
-// in a nil pointer for the end time will instruct Hyperion to continue streaming once it has caught up to the current
-// head block.
-func NewDeltasReqByTime(code string, table string, scope string, payer string, start *time.Time, end *time.Time) *DeltasReq {
-	return ndr(code, table, scope, payer, start, end, 0, 0)
+// NewDeltasReqByTime is a request for table updates with a specific time range. Note that it uses RFC3339 strings.
+// an example of how this format can be expressed is: `time.Now().Format(time.RFC3339)`
+// Passing in an empty string for the end time will instruct Hyperion to continue streaming once it has caught up
+// to the current head block.
+func NewDeltasReqByTime(code string, table string, scope string, payer string, startRFC3339, endRFC3339 string) *DeltasReq {
+	return ndr(code, table, scope, payer, startRFC3339, endRFC3339, 0, 0)
 }
 
-func ndr(code string, table string, scope string, payer string, start *time.Time, end *time.Time, first int64, last int64) *DeltasReq {
+func ndr(code string, table string, scope string, payer string, startRFC3339 string, endRFC3339 string, first int64, last int64) *DeltasReq {
 	if scope == "" {
 		scope = code
 	}
@@ -48,14 +48,13 @@ func ndr(code string, table string, scope string, payer string, start *time.Time
 		Scope: eos.Name(scope),
 		Payer: eos.AccountName(payer),
 	}
+	d.StartFrom, d.ReadUntil = 0, 0
 	switch true {
-	case start == nil && end == nil && first == 0 && last == 0:
-		d.StartFrom, d.ReadUntil = 0, 0
-	case start != nil:
-		d.StartFrom = start.UTC().Format(time.RFC3339)
+	case startRFC3339 != "":
+		d.StartFrom = startRFC3339
 		fallthrough
-	case end != nil:
-		d.ReadUntil = end.UTC().Format(time.RFC3339)
+	case endRFC3339 != "":
+		d.ReadUntil = endRFC3339
 	case first > 0:
 		d.StartFrom = first
 		fallthrough
@@ -89,36 +88,36 @@ type ActionsReq struct {
 
 // NewActionsReq is a request for action traces starting at the current head block.
 func NewActionsReq(contract string, account string, action string) *ActionsReq {
-	return nar(contract, account, action, nil, nil, 0, 0)
+	return nar(contract, account, action, "", "", 0, 0)
 }
 
-// NewActionsReqByBlock is a request for action traces with a specific time range. Note that it uses pointers, and passing
-// in a nil pointer for the end time will instruct Hyperion to continue streaming once it has caught up to the current
-// head block.
-func NewActionsReqByTime(contract string, account string, action string, start *time.Time, end *time.Time) *ActionsReq {
-	return nar(contract, account, action, start, end, 0, 0)
+// NewActionsReqByTime is a request for action updates with a specific time range. Note that it uses RFC3339 strings.
+// an example of how this format can be expressed is: `time.Now().Format(time.RFC3339)`
+// Passing in an empty string for the end time will instruct Hyperion to continue streaming once it has caught up
+// to the current head block.
+func NewActionsReqByTime(contract string, account string, action string, startRFC3339 string, endRFC3339 string) *ActionsReq {
+	return nar(contract, account, action, startRFC3339, endRFC3339, 0, 0)
 }
 
 // NewActionsReqByTime is a request for action traces with a specific block range. If last == 0 Hyperion will continue
 // streaming data once it has caught up to the head block.
 func NewActionsReqByBlock(contract string, account string, action string, first int64, last int64) *ActionsReq {
-	return nar(contract, account, action, nil, nil, first, last)
+	return nar(contract, account, action, "", "", first, last)
 }
 
-func nar(contract string, account string, action string, start *time.Time, end *time.Time, first int64, last int64) *ActionsReq {
+func nar(contract string, account string, action string, startRFC3339 string, endRFC3339 string, first int64, last int64) *ActionsReq {
 	a := &ActionsReq{
 		Contract: eos.AccountName(contract),
 		Account:  eos.AccountName(account),
 		Action:   eos.ActionName(action),
 	}
+	a.StartFrom, a.ReadUntil = 0, 0
 	switch true {
-	case start == nil && end == nil && first == 0 && last == 0:
-		a.StartFrom, a.ReadUntil = 0, 0
-	case start != nil:
-		a.StartFrom = start.UTC().Format(time.RFC3339)
+	case startRFC3339 != "":
+		a.StartFrom = startRFC3339
 		fallthrough
-	case end != nil:
-		a.ReadUntil = end.UTC().Format(time.RFC3339)
+	case endRFC3339 != "":
+		a.ReadUntil = endRFC3339
 	case first > 0:
 		a.StartFrom = first
 		fallthrough

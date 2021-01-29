@@ -6,6 +6,62 @@ import (
 	"time"
 )
 
+func TestNewActionsReq(t *testing.T) {
+	if r := NewActionsReq("a", "b", "c"); r == nil {
+		t.Error("got nil request")
+	}
+	if r := NewActionsReqByBlock("a", "b", "c", 0, 0); r == nil {
+		t.Error("got nil request")
+	}
+	if r := NewActionsReqByBlock("a", "b", "c", 1, 0); r == nil {
+		t.Error("got nil request")
+	}
+	if r := NewActionsReqByTime("a", "b", "c", time.Now().Format(time.RFC3339), ""); r == nil {
+		t.Error("got nil request")
+	} else {
+		if ok := r.AddFilter(&ReqFilter{Field: "", Value: ""}); !ok {
+			t.Error("could not add filter")
+		}
+		if ok := r.AddFilter(nil); ok {
+			t.Error("should not be able to supply nil filter")
+		}
+		b, e := r.ToJson()
+		if e != nil {
+			t.Error(e)
+		}
+		if b == nil || len(b) < 10 {
+			t.Error("json too small")
+		}
+	}
+}
+
+func TestNewDeltaReq(t *testing.T) {
+	// TODO: these simply ensure coverage
+	if r := NewDeltasReq("a", "b", "c", ""); r == nil {
+		t.Error("got nil request")
+	}
+	if r := NewDeltasReqByBlock("a", "b", "c", "", 1, 0); r == nil {
+		t.Error("got nil request")
+	}
+	if r := NewDeltasReqByBlock("a", "b", "c", "", 0, 0); r == nil {
+		t.Error("got nil request")
+	}
+	if r := NewDeltasReqByTime("a", "b", "c", "", time.Now().Format(time.RFC3339), ""); r == nil {
+		t.Error("got nil request")
+	}
+	if r := NewDeltasReqByTime("a", "b", "c", "", "", ""); r == nil {
+		t.Error("got nil request")
+	} else {
+		b, e := r.ToJson()
+		if e != nil {
+			t.Error(e)
+		}
+		if b == nil || len(b) < 10 {
+			t.Error("invalid json")
+		}
+	}
+}
+
 func TestDeltaMsg(t *testing.T) {
 	const (
 		deltaTraceMessage = `42["message",{"type":"delta_trace","mode":"live","message":"{\"code\":\"m.federation\",\"scope\":\"m.federation\",\"table\":\"bags\",\"primary_key\":\"16158474573985087488\",\"payer\":\"w.zay.wam\",\"@timestamp\":\"2021-01-28T19:03:01.000\",\"present\":true,\"block_num\":100851918,\"block_id\":\"0602e0cee78f6880ba083cc4781ee31b0998ce752ccf2bc348beef555e0a1f1f\",\"data\":{\"account\":\"w.zay.wam\",\"items\":[\"1099513962800\",\"1099513883909\",\"1099514157356\"],\"locked\":false}}"}]`
@@ -54,6 +110,8 @@ func TestDeltaMsg(t *testing.T) {
 				if len(b) < 256 {
 					t.Error("json was too small")
 				}
+				_ = message.Mode()
+
 				cancel()
 			}
 		}
@@ -155,6 +213,8 @@ func TestActionMsg(t *testing.T) {
 				if len(b) < 512 {
 					t.Error("json was too small")
 				}
+
+				_ = message.Mode()
 				cancel()
 			}
 		}
@@ -211,4 +271,17 @@ func TestActionMsg(t *testing.T) {
 	sendResult(raw, results, errors)
 
 	<-ctx.Done()
+}
+
+func Test_Error(t *testing.T) {
+	switch "" {
+	case NotActionError{}.Error():
+		t.Error("err is empty")
+		fallthrough
+	case NotDeltaError{}.Error():
+		t.Error("err is empty")
+		fallthrough
+	case UnknownTypeError{}.Error():
+		t.Error("err is empty")
+	}
 }
