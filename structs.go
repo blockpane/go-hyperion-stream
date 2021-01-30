@@ -121,6 +121,7 @@ func nar(contract string, account string, action string, startRFC3339 string, en
 	case last > 0 || last == -1:
 		a.ReadUntil = last
 	}
+	a.Filters = make([]*ReqFilter, 0)
 	return a
 }
 

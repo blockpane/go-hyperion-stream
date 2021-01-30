@@ -11,7 +11,7 @@ import (
 
 const (
 	pongWait       = 25 * time.Second
-	maxMessageSize = 8192
+	maxMessageSize = 32768
 )
 
 // Client is a streaming client using a websocket to connect to Hyperion. The Client.Ctx will get closed when the
