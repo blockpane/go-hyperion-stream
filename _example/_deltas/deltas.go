@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	url   = "ws://wax.eosrio.io"
+	url   = "wss://wax.eosrio.io"
 	code  = "m.federation"
 	table = "bags"
 	scope = "m.federation"
